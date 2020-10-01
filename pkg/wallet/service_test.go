@@ -17,3 +17,14 @@ func TestService_FindAccountByID_success_user(t *testing.T){
 	}
 
 }
+func TestService_FindAccountByID_notFound_user(t *testing.T){
+	var svc Service
+	svc.RegisterAccount("+992000000001")
+
+	account, err := svc.FindAccountByID(2)
+
+	if err == nil{
+		t.Errorf("method returned nil error, account => %v", account)
+	}
+
+}
