@@ -90,6 +90,23 @@ func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
 	return nil, ErrAccountNotFound
 }
 
+
+//Deposit method
+func (s *Service) Deposit (accountID int64, amount types.Money)error{
+	if amount<0 {
+		return ErrAmountMustBePositive
+	}
+	account, err := s.FindAccountByID(accountID)
+	if  err != nil{
+		return err
+	}
+	account.Balance += amount
+	return nil
+
+
+
+}
+
 //FindPaymentByID method
 func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
 

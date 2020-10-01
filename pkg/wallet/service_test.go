@@ -35,26 +35,33 @@ func TestService_Reject_success_user(t *testing.T){
 	account, err := svc.FindAccountByID(1)
 
 	if err != nil{
-		t.Errorf("method RegisterAccount returned not nil error, account => %v", account)
+		t.Errorf("method RegisterAccount returned not nil error, error => %v", err)
 	}
 
-	account.Balance +=100_00
+
+	err = svc.Deposit(account.ID, 100_00)
+	if err != nil{
+		t.Errorf("method Deposit returned not nil error, error => %v", err)
+	}
+
+
+
 	payment, err := svc.Pay(account.ID, 10_00,"Cafe")
 
 	if err != nil{
-		t.Errorf("method Pay returned not nil error, account => %v", account)
+		t.Errorf("method Pay returned not nil error, error => %v", err)
 	}
 
 	pay, err := svc.FindPaymentByID(payment.ID)
 
 	if err != nil{
-		t.Errorf("method FindPaymentByID returned not nil error, payment => %v", payment)
+		t.Errorf("method FindPaymentByID returned not nil error, error => %v", err)
 	}
 
 	err = svc.Reject(pay.ID)
 
 	if err != nil{
-		t.Errorf("method Reject returned not nil error, pay => %v", pay)
+		t.Errorf("method Reject returned not nil error, error => %v", err)
 	}
 
 
@@ -70,7 +77,12 @@ func TestService_Reject_fail_user(t *testing.T){
 		t.Errorf("method RegisterAccount returned not nil error, account => %v", account)
 	}
 
-	account.Balance +=100_00
+	err = svc.Deposit(account.ID, 100_00)
+	if err != nil{
+		t.Errorf("method Deposit returned not nil error, error => %v", err)
+	}
+
+
 	payment, err := svc.Pay(account.ID, 10_00,"Cafe")
 
 	if err != nil{
