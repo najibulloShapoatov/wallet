@@ -3,7 +3,10 @@ package wallet
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/najibulloShapoatov/wallet/pkg/types"
@@ -26,7 +29,6 @@ var ErrPaymentNotFound = errors.New("payment not found")
 
 //ErrFavoriteNotFound -- favorite not found
 var ErrFavoriteNotFound = errors.New("favorite not found")
-
 
 //Service model
 type Service struct {
@@ -218,6 +220,41 @@ func (s *Service) ExportToFile(path string) error {
 
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+//ImportFromFile method
+func (s *Service) ImportFromFile(path string) error {
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	strArray := strings.Split(string(content), "|")
+	if len(strArray) > 0 {
+		strArray = strArray[:len(strArray)-1]
+	}
+	for _, v := range strArray {
+		strArrAcount := strings.Split(v, ";")
+		fmt.Println(strArrAcount)
+
+		id, err := strconv.ParseInt(strArrAcount[0], 10, 64)
+		if err != nil {
+			return err
+		}
+		balance, err := strconv.ParseInt(strArrAcount[2], 10, 64)
+		if err != nil {
+			return err
+		}
+		account := &types.Account{
+			ID:      id,
+			Phone:   types.Phone(strArrAcount[1]),
+			Balance: types.Money(balance),
+		}
+		s.accounts = append(s.accounts, account)
 	}
 
 	return nil

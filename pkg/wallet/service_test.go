@@ -174,3 +174,14 @@ func TestService_Export_success_user(t *testing.T) {
 	}
 
 }
+
+func TestService_Import_success_user(t *testing.T) {
+	var svc Service
+
+
+	err := svc.ImportFromFile("export.txt")
+	if err != nil {
+		t.Errorf("method ExportToFile returned not nil error, err => %v", err)
+	}
+
+}
