@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"errors"
+	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/najibulloShapoatov/wallet/pkg/types"
@@ -24,6 +26,7 @@ var ErrPaymentNotFound = errors.New("payment not found")
 
 //ErrFavoriteNotFound -- favorite not found
 var ErrFavoriteNotFound = errors.New("favorite not found")
+
 
 //Service model
 type Service struct {
@@ -181,19 +184,41 @@ func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
 
 	var favorite *types.Favorite
 	for _, v := range s.favorites {
-		if v.ID == favoriteID{
+		if v.ID == favoriteID {
 			favorite = v
 			break
 		}
 	}
-	if favorite == nil{
+	if favorite == nil {
 		return nil, ErrFavoriteNotFound
 	}
 
 	payment, err := s.Pay(favorite.AccountID, favorite.Amount, favorite.Category)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return payment, nil
+}
+
+//ExportToFile func
+func (s *Service) ExportToFile(path string) error {
+
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var str string
+	for _, v := range s.accounts {
+		str += fmt.Sprint(v.ID) + ";" + string(v.Phone) + ";" + fmt.Sprint(v.Balance) + "|"
+	}
+	_, err = file.WriteString(str)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
