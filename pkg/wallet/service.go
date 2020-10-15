@@ -512,19 +512,21 @@ func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records i
 				file, _ = os.OpenFile(dir+"/payments"+fmt.Sprint(t)+".dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 				}
 				k++
-				str += fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
-				if k == records-1{
+				str = fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
+				_, err = file.WriteString(str)
+				if k == records{
 					str=""
-					_, err = file.WriteString(str)
 					t++
 					k=0;
 					file.Close()
 				}
 			}
-			if str !=""{
-				_, err = file.WriteString(str)
-				file.Close()
-			}
+				/* _, err = file.WriteString(str)
+				if err == nil{
+					file.Close()
+				} */
+				
+			
 			
 		}
 	}
