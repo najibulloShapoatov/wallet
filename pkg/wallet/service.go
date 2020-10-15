@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/najibulloShapoatov/wallet/pkg/types"
 )
+
 var err error
 
 //ErrPhoneRegistered -- phone already registred
@@ -264,14 +265,14 @@ func (s *Service) ImportFromFile(path string) error {
 //Export method
 func (s *Service) Export(dir string) error {
 
-/* 	abs, err := filepath.Abs(dir)
-	if err != nil {
-		return err
-	}
-	err = os.Chdir(abs)
-	if err != nil {
-		return err
-	} */
+	/* 	abs, err := filepath.Abs(dir)
+	   	if err != nil {
+	   		return err
+	   	}
+	   	err = os.Chdir(abs)
+	   	if err != nil {
+	   		return err
+	   	} */
 
 	if len(s.accounts) > 0 {
 		file, _ := os.OpenFile(dir+"/accounts.dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
@@ -315,11 +316,9 @@ func (s *Service) Export(dir string) error {
 //Import method
 func (s *Service) Import(dir string) error {
 
-
-
 	_, err := os.Stat(dir + "/accounts.dump")
 
-	if  err == nil {
+	if err == nil {
 		content, err := ioutil.ReadFile(dir + "/accounts.dump")
 		if err != nil {
 			return err
@@ -362,7 +361,7 @@ func (s *Service) Import(dir string) error {
 
 	_, err1 := os.Stat(dir + "/payments.dump")
 
-	if  err1 ==nil {
+	if err1 == nil {
 		content, err := ioutil.ReadFile(dir + "/payments.dump")
 		if err != nil {
 			return err
@@ -413,7 +412,7 @@ func (s *Service) Import(dir string) error {
 
 	_, err2 := os.Stat(dir + "/favorites.dump")
 
-	if  err2 == nil {
+	if err2 == nil {
 		content, err := ioutil.ReadFile(dir + "/favorites.dump")
 		if err != nil {
 			return err
@@ -457,6 +456,76 @@ func (s *Service) Import(dir string) error {
 				}
 				s.favorites = append(s.favorites, data)
 			}
+		}
+	}
+
+	return nil
+}
+
+//ExportAccountHistory ....
+func (s *Service) ExportAccountHistory(accountID int64) ([]types.Payment, error) {
+
+	account, err := s.FindAccountByID(accountID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var payments []types.Payment
+	for _, v := range s.payments {
+		if v.AccountID == account.ID {
+			data := types.Payment{
+				ID:        v.ID,
+				AccountID: v.AccountID,
+				Amount:    v.Amount,
+				Category:  v.Category,
+				Status:    v.Status,
+			}
+			payments = append(payments, data)
+		}
+	}
+	return payments, nil
+}
+
+//HistoryToFiles ...
+func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
+
+	if len(payments) > 0 {
+		if len(payments) <= records {
+			file, _ := os.OpenFile(dir+"/payments.dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+			defer file.Close()
+
+			var str string
+			for _, v := range payments {
+				str += fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
+			}
+			_, err = file.WriteString(str)
+		}else{
+			
+
+			var str string
+			k:=0
+			t:=1
+			var file *os.File
+			for _, v := range payments {
+				if k==0{
+				file, _ = os.OpenFile(dir+"/payments"+fmt.Sprint(t)+".dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+				}
+				k++
+				str += fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
+				if k == records-1{
+					str=""
+					_, err = file.WriteString(str)
+					t++
+					k=0;
+					file.Close()
+				}
+			}
+			if str !=""{
+				_, err = file.WriteString(str)
+				file.Close()
+			}
+			
 		}
 	}
 
