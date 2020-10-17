@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/najibulloShapoatov/wallet/pkg/types"
@@ -499,37 +500,78 @@ func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records i
 			for _, v := range payments {
 				str += fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
 			}
-			_, err = file.WriteString(str)
-		}else{
-			
+			file.WriteString(str)
+		} else {
 
 			var str string
-			k:=0
-			t:=1
+			k := 0
+			t := 1
 			var file *os.File
 			for _, v := range payments {
-				if k==0{
-				file, _ = os.OpenFile(dir+"/payments"+fmt.Sprint(t)+".dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+				if k == 0 {
+					file, _ = os.OpenFile(dir+"/payments"+fmt.Sprint(t)+".dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 				}
 				k++
 				str = fmt.Sprint(v.ID) + ";" + fmt.Sprint(v.AccountID) + ";" + fmt.Sprint(v.Amount) + ";" + fmt.Sprint(v.Category) + ";" + fmt.Sprint(v.Status) + "\n"
 				_, err = file.WriteString(str)
-				if k == records{
-					str=""
+				if k == records {
+					str = ""
 					t++
-					k=0;
+					k = 0
 					file.Close()
 				}
 			}
-				/* _, err = file.WriteString(str)
-				if err == nil{
-					file.Close()
-				} */
-				
-			
-			
+			/* _, err = file.WriteString(str)
+			if err == nil{
+				file.Close()
+			} */
+
 		}
 	}
 
 	return nil
+}
+
+//SumPayments ...
+func (s *Service) SumPayments(goroutines int) types.Money {
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
+	sum := int64(0)
+	kol := 0
+	i := 0
+	if goroutines == 0 {
+		kol = len(s.payments)
+	} else {
+		kol = int(len(s.payments) / goroutines)
+	}
+	for i = 0; i < goroutines-1; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			val := int64(0)
+			payments := s.payments[index*kol : (index+1)*kol]
+			for _, payment := range payments {
+				val += int64(payment.Amount)
+			}
+			mu.Lock()
+			sum += val
+			mu.Unlock()
+
+		}(i)
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		val := int64(0)
+		payments := s.payments[i*kol:]
+		for _, payment := range payments {
+			val += int64(payment.Amount)
+		}
+		mu.Lock()
+		sum += val
+		mu.Unlock()
+
+	}()
+	wg.Wait()
+	return types.Money(sum)
 }
