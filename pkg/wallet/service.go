@@ -666,9 +666,11 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 	parts := len(s.payments) / size
 
 	sum := s.SumPayments(parts)
+
 	ch <- Progress{
 		Part:   parts,
 		Result: sum,
 	}
+	<-ch
 	return ch
 }
