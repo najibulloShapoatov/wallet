@@ -658,13 +658,13 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 	}
 	return ps, nil
 }
-/* 
+
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 
 	size := 100_000
 	parts := len(s.payments) / size
-	wg := sync.WaitGroup{}
+	//wg := sync.WaitGroup{}
 
 	ch := make(chan Progress)
 
@@ -674,9 +674,8 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 		parts = 1
 
 	}
-
 	for i := 0; i < parts; i++ {
-		wg.Add(1)
+		//wg.Add(1)
 		payments := []*types.Payment{}
 		if len(s.payments) < size {
 			payments = s.payments
@@ -684,7 +683,7 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 			payments = s.payments[i*size : (i+1)*size]
 		}
 		go func(ch chan<- Progress, data []*types.Payment, part int) {
-			defer wg.Done()
+			//defer wg.Done()
 			val := types.Money(0)
 			for _, v := range data {
 				val += v.Amount
@@ -697,69 +696,15 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 		}(ch, payments, i)
 	}
 
-	total := types.Money(0)
 	for i := 0; i < parts; i++ {
 		p := <-ch
-		total += p.Result
-		log.Println(p)
-	}
-	log.Println("total =>", total)
-
-	go func() {
-		defer close(ch)
-		wg.Wait()
-	}()
-
-	return ch
-} */
-
-//SumPaymentsWithProgress ...
-func (s *Service) SumPaymentsWithProgress() <-chan types.Money {
-
-	size := 100_000
-	parts := len(s.payments) / size
-	wg := sync.WaitGroup{}
-
-	ch := make(chan types.Money)
-
-	log.Println("parts=>", parts)
-
-	if parts < 1 {
-		parts = 1
-
+		log.Println(p.Result)
 	}
 
-	for i := 0; i < parts; i++ {
-		wg.Add(1)
-		payments := []*types.Payment{}
-		if len(s.payments) < size {
-			payments = s.payments
-		} else {
-			payments = s.payments[i*size : (i+1)*size]
-		}
-		go func(ch chan<- types.Money, data []*types.Payment, part int) {
-			defer wg.Done()
-			val := types.Money(0)
-			for _, v := range data {
-				val += v.Amount
-			}
 
-			ch <- val
-		}(ch, payments, i)
-	}
+		 close(ch)
+		//wg.Wait()
 
-	total := types.Money(0)
-	for i := 0; i < parts; i++ {
-		p := <-ch
-		total += p
-		log.Println(p)
-	}
-	log.Println("total =>", total)
-
-	go func() {
-		defer close(ch)
-		wg.Wait()
-	}()
 
 	return ch
 }
