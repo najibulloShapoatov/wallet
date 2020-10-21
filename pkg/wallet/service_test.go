@@ -327,7 +327,7 @@ func BenchmarkFilterPayments_user(b *testing.B) {
 
 func BenchmarkSumPaymentsWithProgress_user(b *testing.B) {
 	var svc Service
-
+/* 
 	account, err := svc.RegisterAccount("+992000000001")
 
 	if err != nil {
@@ -341,7 +341,7 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B) {
 
 	for i := 0; i < 100; i++ {
 		svc.Pay(account.ID, types.Money(i), "Cafe")
-	}
+	} */
 
 	 svc.SumPaymentsWithProgress()
 
