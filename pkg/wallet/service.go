@@ -41,6 +41,12 @@ type Service struct {
 	favorites     []*types.Favorite
 }
 
+//Progress ..
+type Progress struct {
+	Part   int
+	Result types.Money
+}
+
 //RegisterAccount meth
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	for _, account := range s.accounts {
@@ -640,16 +646,14 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 
 	}()
 	wg.Wait()
-	if len(ps)==0{
+	if len(ps) == 0 {
 		return nil, nil
 	}
-	return  ps, nil
+	return ps, nil
 }
 
-
 //FilterPaymentsByFn ...
-func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, goroutines int,) ([]types.Payment, error){
-
+func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, goroutines int) ([]types.Payment, error) {
 
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
@@ -686,6 +690,7 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 
 		}(i)
 	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -711,8 +716,31 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 
 	}()
 	wg.Wait()
-	if len(ps)==0{
+	if len(ps) == 0 {
 		return nil, nil
 	}
-	return  ps, nil
+	return ps, nil
+}
+
+//SumPaymentsWithProgress ...
+func (s *Service) SumPaymentsWithProgress() <-chan Progress {
+	ch := make(chan Progress)
+	defer close(ch)
+	size := 100_000
+	parts := len(s.payments) / size
+
+	for i := 0; i < parts; i++ {
+		go func(ch chan<- Progress, payments []*types.Payment){
+			sum :=types.Money(0)
+			for _, v := range payments {
+				sum+=v.Amount
+			}
+			ch <- Progress{
+				Part: parts,
+				Result: sum,
+			}
+
+		}(ch, s.payments[i*size : (i+1)*size])
+	}
+	return ch
 }

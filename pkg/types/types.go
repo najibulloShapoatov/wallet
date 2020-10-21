@@ -43,3 +43,5 @@ type Favorite struct {
 	Amount    Money
 	Category  PaymentCategory
 }
+
+//Progress ...
