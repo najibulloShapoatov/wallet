@@ -713,11 +713,10 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 			for _, v := range data {
 				val += v.Amount
 			}
-			p := types.Progress{
+			ch <- types.Progress{
 				Part:   len(data),
 				Result: val,
 			}
-			safeSend(ch, p)
 		}(ch, payments, i)
 	}
 
@@ -727,10 +726,9 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 	} */
 
 	/* go func() {
-		defer close(ch)
+		//defer close(ch)
 		wg.Wait()
 	}() */
-	safeClose(ch)
 	return ch
 }
 
@@ -753,10 +751,11 @@ func merge(channels []<-chan types.Progress) <-chan types.Progress {
 	return merged
 }
 
+
 func safeClose(ch chan types.Progress) (justClosed bool) {
 	defer func() {
 		if recover() != nil {
-
+	
 			justClosed = false
 		}
 	}()
@@ -764,6 +763,7 @@ func safeClose(ch chan types.Progress) (justClosed bool) {
 	close(ch)   // panic if ch is closed
 	return true // <=> justClosed = true; return
 }
+
 
 func safeSend(ch chan types.Progress, value types.Progress) (closed bool) {
 	defer func() {
