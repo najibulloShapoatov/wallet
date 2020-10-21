@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"fmt"
 	"github.com/najibulloShapoatov/wallet/pkg/types"
 	"testing"
 )
@@ -340,34 +339,29 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B){
 		b.Errorf("method RegisterAccount returned not nil error, account => %v", account)
 	}
 
-	err = svc.Deposit(account.ID, 100_00)
+	err = svc.Deposit(account.ID, 10000000_00000000000)
 	if err != nil {
 		b.Errorf("method Deposit returned not nil error, error => %v", err)
 	}
 
-	_, err = svc.Pay(account.ID, 1, "Cafe")
-	_, err = svc.Pay(account.ID, 2, "Cafe")
-	_, err = svc.Pay(account.ID, 3, "Cafe")
-	_, err = svc.Pay(account.ID, 4, "Cafe")
-	_, err = svc.Pay(account.ID, 5, "Cafe")
-	_, err = svc.Pay(account.ID, 6, "Cafe")
-	_, err = svc.Pay(account.ID, 7, "Cafe")
-	_, err = svc.Pay(account.ID, 8, "Cafe")
-	_, err = svc.Pay(account.ID, 9, "Cafe")
-	_, err = svc.Pay(account.ID, 10, "Cafe")
-	_, err = svc.Pay(account.ID, 11, "Cafe")
-	if err != nil {
-		b.Errorf("method Pay returned not nil error, err => %v", err)
+	for i := 0; i < 1000000; i++ {
+		svc.Pay(account.ID, types.Money(i), "Cafe")
 	}
 
-	ch := svc.SumPaymentsWithProgress()
 
-	s , ok := <- ch
+
+	 ch := svc.SumPaymentsWithProgress()
+
+
+	 //log.Println("==>", len(svc.payments), "\n\n ==>>>", svc.payments)
+
+ 
+	_ , ok := <- ch
 
 	if ok{
-		b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
+		//b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
 	}
-	fmt.Println(s)
+
 
 
 

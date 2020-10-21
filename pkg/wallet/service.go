@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -660,34 +661,70 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan Progress {
-	ch := make(chan Progress)
-	defer close(ch)
+
 	size := 100_000
 	parts := len(s.payments) / size
-
 	wg := sync.WaitGroup{}
-	mu := sync.Mutex{}
-	sum := types.Money(0)
+
+	ch := make(chan Progress)
+
+	if parts < 1 {
+		for i := 0; i < 1; i++ {
+			wg.Add(1)
+			go func(ch chan<- Progress, data []*types.Payment, part int) {
+				defer wg.Done()
+				val := types.Money(0)
+				for _, v := range data {
+					val += v.Amount
+				}
+
+				ch <- Progress{
+					Part:   part,
+					Result: val,
+				}
+			}(ch, s.payments, i)
+		}
+
+		go func() {
+			defer close(ch)
+			wg.Wait()
+		}()
+
+		return ch
+	}
 
 	for i := 0; i < parts; i++ {
 		wg.Add(1)
-		go func(ch chan<- Progress, payments []*types.Payment) {
+
+		go func(ch chan<- Progress, data []*types.Payment, part int) {
 			defer wg.Done()
 			val := types.Money(0)
-			for _, v := range payments {
+			for _, v := range data {
 				val += v.Amount
 			}
-			mu.Lock()
-			sum += val
-			mu.Unlock()
-			ch <- Progress{
-				Part:   parts,
-				Result: sum,
-			}
 
-		}(ch, s.payments[i*size:(i+1)*size])
+			ch <- Progress{
+				Part:   part,
+				Result: val,
+			}
+		}(ch, s.payments[i*size:(i+1)*size], i)
 	}
-	wg.Wait()
-	
+
+	total := types.Money(0)
+	for i := 0; i < parts; i++ {
+		p := <-ch
+		total += p.Result
+		log.Println(p)
+	}
+	log.Println("total =>", total)
+
+	/* wg.Wait()
+	close(ch)
+	return ch */
+	go func() {
+		defer close(ch)
+		wg.Wait()
+	}()
+
 	return ch
 }
