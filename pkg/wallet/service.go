@@ -576,81 +576,16 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 //FilterPayments ...
 func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payment, error) {
 
-	p, err :=s.FilterPaymentsByFn(func(payment types.Payment)bool{ 
-		if payment.AccountID == accountID{
+	p, err := s.FilterPaymentsByFn(func(payment types.Payment) bool {
+		if payment.AccountID == accountID {
 			return true
-			} 
-			return false
-			},
-			 goroutines)
+		}
+		return false
+	},
+		goroutines)
 
 	return p, err
-/* 
-	account, err := s.FindAccountByID(accountID)
 
-	if err != nil {
-		return nil, err
-	}
-
-	wg := sync.WaitGroup{}
-	mu := sync.Mutex{}
-	kol := 0
-	i := 0
-	var ps []types.Payment
-	if goroutines == 0 {
-		kol = len(s.payments)
-	} else {
-		kol = int(len(s.payments) / goroutines)
-	}
-	for i = 0; i < goroutines-1; i++ {
-		wg.Add(1)
-		go func(index int) {
-			defer wg.Done()
-			var pays []types.Payment
-			payments := s.payments[index*kol : (index+1)*kol]
-			for _, v := range payments {
-				if v.AccountID == account.ID {
-					pays = append(pays, types.Payment{
-						ID:        v.ID,
-						AccountID: v.AccountID,
-						Amount:    v.Amount,
-						Category:  v.Category,
-						Status:    v.Status,
-					})
-				}
-			}
-			mu.Lock()
-			ps = append(ps, pays...)
-			mu.Unlock()
-
-		}(i)
-	}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		var pays []types.Payment
-		payments := s.payments[i*kol:]
-		for _, v := range payments {
-			if v.AccountID == account.ID {
-				pays = append(pays, types.Payment{
-					ID:        v.ID,
-					AccountID: v.AccountID,
-					Amount:    v.Amount,
-					Category:  v.Category,
-					Status:    v.Status,
-				})
-			}
-		}
-		mu.Lock()
-		ps = append(ps, pays...)
-		mu.Unlock()
-
-	}()
-	wg.Wait()
-	if len(ps) == 0 {
-		return nil, nil
-	}
-	return ps, nil */
 }
 
 //FilterPaymentsByFn ...
@@ -730,18 +665,10 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 	size := 100_000
 	parts := len(s.payments) / size
 
-	for i := 0; i < parts; i++ {
-		go func(ch chan<- Progress, payments []*types.Payment) {
-			sum := types.Money(0)
-			for _, v := range payments {
-				sum += v.Amount
-			}
-			ch <- Progress{
-				Part:   parts,
-				Result: sum,
-			}
-
-		}(ch, s.payments[i*size:(i+1)*size])
+	sum := s.SumPayments(parts)
+	ch <- Progress{
+		Part:   parts,
+		Result: sum,
 	}
 	return ch
 }
