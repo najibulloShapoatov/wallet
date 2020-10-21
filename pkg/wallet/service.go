@@ -653,7 +653,7 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 	}
 	return ps, nil
 }
-
+/* 
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
@@ -683,7 +683,54 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 		channels[i] = ch
 	}
 	return merge(channels)
+} */
+
+ 
+//SumPaymentsWithProgress ...
+func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
+
+	size := 100_000
+	parts := len(s.payments) / size
+
+	ch := make(chan types.Progress)
+	defer close(ch)
+
+	//log.Println("parts=>", parts)
+
+	if parts < 1 {
+		parts = 1
+
+	}
+	for i := 0; i < parts; i++ {
+
+		payments := []*types.Payment{}
+		if len(s.payments) < size {
+			payments = s.payments
+		} else {
+			payments = s.payments[i*size : (i+1)*size]
+		}
+		go func(ch chan types.Progress, data []*types.Payment, part int) {
+
+			val := types.Money(0)
+			for _, v := range data {
+				val += v.Amount
+			}
+
+			ch <- types.Progress{
+				Part:   len(data),
+				Result: val,
+			}
+		}(ch, payments, i)
+	}
+
+ 
+
+	return ch
 }
+
+
+
+
 
 func merge(channels []<-chan types.Progress) <-chan types.Progress {
 	wg := sync.WaitGroup{}
