@@ -359,7 +359,7 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B){
 	_ , ok := <- ch
 
 	if ok{
-		//b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
+		b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
 	}
 
 
