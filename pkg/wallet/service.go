@@ -754,25 +754,3 @@ func merge(channels []<-chan types.Progress) <-chan types.Progress {
 	return merged
 }
 
-func safeClose(ch chan types.Progress) (justClosed bool) {
-	defer func() {
-		if recover() != nil {
-
-			justClosed = false
-		}
-	}()
-
-	close(ch)   // panic if ch is closed
-	return true // <=> justClosed = true; return
-}
-
-func safeSend(ch chan types.Progress, value types.Progress) (closed bool) {
-	defer func() {
-		if recover() != nil {
-			closed = true
-		}
-	}()
-
-	ch <- value  // panic if ch is closed
-	return false // <=> closed = false; return
-}

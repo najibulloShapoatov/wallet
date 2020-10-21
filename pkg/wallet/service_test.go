@@ -335,12 +335,12 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B) {
 		b.Errorf("method RegisterAccount returned not nil error, account => %v", account)
 	}
 
-	err = svc.Deposit(account.ID, 10000000_00000000000)
+	err = svc.Deposit(account.ID, 10000000_0000000)
 	if err != nil {
 		b.Errorf("method Deposit returned not nil error, error => %v", err)
 	}
 
-	for i := 0; i < 10000000; i++ {
+	for i := 0; i < 1000; i++ {
 		svc.Pay(account.ID, types.Money(i), "Cafe")
 	} 
 

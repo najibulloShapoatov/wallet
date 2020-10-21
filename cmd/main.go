@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	_ "github.com/najibulloShapoatov/wallet/pkg/types"
+	 "github.com/najibulloShapoatov/wallet/pkg/types"
 	"github.com/najibulloShapoatov/wallet/pkg/wallet"
 )
 
@@ -22,9 +22,9 @@ func main() {
 		log.Printf("method Deposit returned not nil error, error => %v", err)
 	}
 
-	/* for i := 0; i < 1000000; i++ {
+	 for i := 0; i < 100; i++ {
 		svc.Pay(account.ID, types.Money(i), "Cafe")
-	} */
+	} 
 
 	ch := svc.SumPaymentsWithProgress()
 
