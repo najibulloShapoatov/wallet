@@ -660,7 +660,7 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan Progress {
-	ch := make(chan Progress)
+	ch := make(chan Progress, 1)
 	defer close(ch)
 	size := 100_000
 	parts := len(s.payments) / size
@@ -671,6 +671,6 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 		Part:   parts,
 		Result: sum,
 	}
-	<-ch
+	//<-ch
 	return ch
 }
