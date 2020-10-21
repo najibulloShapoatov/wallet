@@ -690,6 +690,10 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
 	ch := make(chan types.Progress)
 
+	if len(s.payments) == 0 {
+		return ch
+	}
+
 	size := 100_000
 	parts := len(s.payments) / size
 	//wg := sync.WaitGroup{}
@@ -751,11 +755,10 @@ func merge(channels []<-chan types.Progress) <-chan types.Progress {
 	return merged
 }
 
-
 func safeClose(ch chan types.Progress) (justClosed bool) {
 	defer func() {
 		if recover() != nil {
-	
+
 			justClosed = false
 		}
 	}()
@@ -763,7 +766,6 @@ func safeClose(ch chan types.Progress) (justClosed bool) {
 	close(ch)   // panic if ch is closed
 	return true // <=> justClosed = true; return
 }
-
 
 func safeSend(ch chan types.Progress, value types.Progress) (closed bool) {
 	defer func() {
