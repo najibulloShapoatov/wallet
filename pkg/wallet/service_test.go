@@ -343,13 +343,13 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B) {
 		svc.Pay(account.ID, types.Money(i), "Cafe")
 	}
 
-	 svc.SumPaymentsWithProgress()
-/* 
+	ch :=  svc.SumPaymentsWithProgress()
+
 	_, ok := <-ch
 
 	if ok {
 		b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
-	} */
+	} 
 
 }
 

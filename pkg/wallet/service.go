@@ -688,42 +688,50 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
+	ch := make(chan types.Progress)
+
 	size := 100_000
 	parts := len(s.payments) / size
+	//wg := sync.WaitGroup{}
 
 	log.Println("parts=>", parts)
 
 	if parts < 1 {
 		parts = 1
 	}
-	channels := make([]<-chan types.Progress, parts)
 	for i := 0; i < parts; i++ {
-
 		//wg.Add(1)
-		
 		payments := []*types.Payment{}
 		if len(s.payments) < size {
 			payments = s.payments
 		} else {
 			payments = s.payments[i*size : (i+1)*size]
 		}
-		ch := make(chan types.Progress)
 		go func(ch chan types.Progress, data []*types.Payment, part int) {
 			//defer wg.Done()
 			val := types.Money(0)
 			for _, v := range data {
 				val += v.Amount
 			}
-
-			ch <- types.Progress{
+			p := types.Progress{
 				Part:   len(data),
 				Result: val,
 			}
+			safeSend(ch, p)
 		}(ch, payments, i)
-		channels[i] = ch
 	}
 
-	return merge(channels)
+	/* for i := 0; i < parts; i++ {
+		p := <- ch
+		log.Println(p)
+	} */
+
+	/* go func() {
+		defer close(ch)
+		wg.Wait()
+	}() */
+	safeClose(ch)
+	return ch
 }
 
 func merge(channels []<-chan types.Progress) <-chan types.Progress {
@@ -743,4 +751,27 @@ func merge(channels []<-chan types.Progress) <-chan types.Progress {
 		wg.Wait()
 	}()
 	return merged
+}
+
+func safeClose(ch chan types.Progress) (justClosed bool) {
+	defer func() {
+		if recover() != nil {
+
+			justClosed = false
+		}
+	}()
+
+	close(ch)   // panic if ch is closed
+	return true // <=> justClosed = true; return
+}
+
+func safeSend(ch chan types.Progress, value types.Progress) (closed bool) {
+	defer func() {
+		if recover() != nil {
+			closed = true
+		}
+	}()
+
+	ch <- value  // panic if ch is closed
+	return false // <=> closed = false; return
 }
