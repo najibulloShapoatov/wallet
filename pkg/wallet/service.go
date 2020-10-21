@@ -664,9 +664,9 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 
 	size := 100_000
 	parts := len(s.payments) / size
-	//wg := sync.WaitGroup{}
 
 	ch := make(chan Progress)
+	defer close(ch)
 
 	log.Println("parts=>", parts)
 
@@ -675,36 +675,31 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 
 	}
 	for i := 0; i < parts; i++ {
-		//wg.Add(1)
+
 		payments := []*types.Payment{}
 		if len(s.payments) < size {
 			payments = s.payments
 		} else {
 			payments = s.payments[i*size : (i+1)*size]
 		}
-		go func(ch chan<- Progress, data []*types.Payment, part int) {
-			//defer wg.Done()
+		go func(ch chan Progress, data []*types.Payment, part int) {
+
 			val := types.Money(0)
 			for _, v := range data {
 				val += v.Amount
 			}
 
 			ch <- Progress{
-				Part:   part,
+				Part:   len(data),
 				Result: val,
 			}
 		}(ch, payments, i)
 	}
 
-	for i := 0; i < parts; i++ {
+ 	for i := 0; i < parts; i++ {
 		p := <-ch
 		log.Println(p.Result)
-	}
-
-
-		 close(ch)
-		//wg.Wait()
-
+	} 
 
 	return ch
 }
