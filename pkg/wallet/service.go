@@ -43,7 +43,6 @@ type Service struct {
 	favorites     []*types.Favorite
 }
 
-
 //RegisterAccount meth
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	for _, account := range s.accounts {
@@ -658,32 +657,31 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
-	const size = 100_000
-	var prts = len(s.payments) / size
-	channels := make([]<-chan types.Progress, prts)
+	const sizeOfBlock = 100_000
+	var goroutines int = len(s.payments) / sizeOfBlock
+	var sizeOfChannels int = len(s.payments) / sizeOfBlock
+	channels := make([]<-chan types.Progress, sizeOfChannels)
 
-	for i := 0; i < prts; i++ {
-		l := i*size
-		r := (i+1)*size
-		if r> len(s.payments){
-			r=len(s.payments)
+	for i := 0; i < goroutines; i++ {
+		var l int = i * sizeOfBlock
+		var r int = (i + 1) * sizeOfBlock
+		if r > len(s.payments) {
+			r = len(s.payments)
 		}
 		ch := make(chan types.Progress)
-		go func(ch chan<- types.Progress, data []*types.Payment){
+		go func(ch chan<- types.Progress, data []*types.Payment) {
 			defer close(ch)
-			total := types.Money(0)
-			for _, v := range data {
-				total += v.Amount
+			var total types.Money = 0
+			for _, payment := range data {
+				total += payment.Amount
 			}
 			ch <- types.Progress{
-				Part: len(data),
+				Part:   len(data),
 				Result: total,
 			}
 		}(ch, s.payments[l:r])
 		channels[i] = ch
 	}
-
-
 	return merge(channels)
 }
 
