@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"log"
 	"testing"
 
 	"github.com/najibulloShapoatov/wallet/pkg/types"
@@ -344,15 +343,15 @@ func BenchmarkSumPaymentsWithProgress_user(b *testing.B) {
 		svc.Pay(account.ID, types.Money(i), "Cafe")
 	}
 
-	ch :=  svc.SumPaymentsWithProgress()
+	 svc.SumPaymentsWithProgress()
 
-	s, ok := <-ch
+	/* s, ok := <-ch
 
 	if ok {
 		b.Errorf(" method SumPaymentsWithProgress ok not closed => %v", ok)
 	} 
 
-	log.Println("=======>>>>>",s)
+	log.Println("=======>>>>>",s) */
 
 }
 
