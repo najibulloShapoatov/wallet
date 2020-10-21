@@ -331,7 +331,7 @@ func BenchmarkFilterPayments_user(b *testing.B){
 }
 
 
-func BenchmarkFilterPaymentsByFn_user(b *testing.B){
+func BenchmarkSumPaymentsWithProgress_user(b *testing.B){
 	var svc Service
 
 	account, err := svc.RegisterAccount("+992000000001")
