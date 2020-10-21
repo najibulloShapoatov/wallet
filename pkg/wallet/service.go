@@ -272,15 +272,6 @@ func (s *Service) ImportFromFile(path string) error {
 //Export method
 func (s *Service) Export(dir string) error {
 
-	/* 	abs, err := filepath.Abs(dir)
-	   	if err != nil {
-	   		return err
-	   	}
-	   	err = os.Chdir(abs)
-	   	if err != nil {
-	   		return err
-	   	} */
-
 	if len(s.accounts) > 0 {
 		file, _ := os.OpenFile(dir+"/accounts.dump", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 
@@ -585,6 +576,16 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 //FilterPayments ...
 func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payment, error) {
 
+	p, err :=s.FilterPaymentsByFn(func(payment types.Payment)bool{ 
+		if payment.AccountID == accountID{
+			return true
+			} 
+			return false
+			},
+			 goroutines)
+
+	return p, err
+/* 
 	account, err := s.FindAccountByID(accountID)
 
 	if err != nil {
@@ -649,7 +650,7 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	if len(ps) == 0 {
 		return nil, nil
 	}
-	return ps, nil
+	return ps, nil */
 }
 
 //FilterPaymentsByFn ...
@@ -730,17 +731,17 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 	parts := len(s.payments) / size
 
 	for i := 0; i < parts; i++ {
-		go func(ch chan<- Progress, payments []*types.Payment){
-			sum :=types.Money(0)
+		go func(ch chan<- Progress, payments []*types.Payment) {
+			sum := types.Money(0)
 			for _, v := range payments {
-				sum+=v.Amount
+				sum += v.Amount
 			}
 			ch <- Progress{
-				Part: parts,
+				Part:   parts,
 				Result: sum,
 			}
 
-		}(ch, s.payments[i*size : (i+1)*size])
+		}(ch, s.payments[i*size:(i+1)*size])
 	}
 	return ch
 }
