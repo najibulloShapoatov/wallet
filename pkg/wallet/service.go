@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+
 	"os"
 	"strconv"
 	"strings"
@@ -653,13 +653,18 @@ func (s *Service) FilterPaymentsByFn(filter func(payment types.Payment) bool, go
 	return ps, nil
 }
 
-/*
+
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
 	const sizeOfBlock = 100_000
 	var goroutines int = len(s.payments) / sizeOfBlock
 	var sizeOfChannels int = len(s.payments) / sizeOfBlock
+	
+	if goroutines <= 0 && len(s.payments)>0{
+		goroutines=1
+		sizeOfChannels=1
+	}
 	channels := make([]<-chan types.Progress, sizeOfChannels)
 
 	for i := 0; i < goroutines; i++ {
@@ -683,8 +688,8 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 		channels[i] = ch
 	}
 	return merge(channels)
-} */
-
+} 
+/* 
 //SumPaymentsWithProgress ...
 func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 
@@ -724,17 +729,16 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 		}(ch, payments, i)
 	}
 
-	/* for i := 0; i < parts; i++ {
+	 for i := 0; i < parts; i++ {
 		p := <- ch
 		log.Println(p)
-	} */
+	}   go func() {
 
-	/* go func() {
-		//defer close(ch)
 		wg.Wait()
-	}() */
+	}()  
+	
 	return ch
-}
+} */
 
 func merge(channels []<-chan types.Progress) <-chan types.Progress {
 	wg := sync.WaitGroup{}
