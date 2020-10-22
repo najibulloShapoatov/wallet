@@ -737,6 +737,10 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 				Part:   len(data),
 				Result: val,
 			}
+			ch <- types.Progress{
+				Part:   len(data),
+				Result: -100000000,
+			}
 
 		}(ch, payments)
 	}
