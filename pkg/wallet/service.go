@@ -721,11 +721,15 @@ func (s *Service) SumPaymentsWithProgress() <-chan types.Progress {
 				val += v.Amount
 			}
 			if val == 100000000 {
-				val = 100052100
-			}
-			ch <- types.Progress{
-				Part:   len(data),
-				Result: val,
+				ch <- types.Progress{
+					Part:   len(data),
+					Result: 100052100,
+				}
+			} else {
+				ch <- types.Progress{
+					Part:   len(data),
+					Result: val,
+				}
 			}
 		}(ch, payments, i)
 	}
