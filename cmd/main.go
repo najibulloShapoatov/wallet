@@ -1,9 +1,10 @@
 package main
 
 import (
+	"sync"
 	"log"
 
-	 "github.com/najibulloShapoatov/wallet/pkg/types"
+	"github.com/najibulloShapoatov/wallet/pkg/types"
 	"github.com/najibulloShapoatov/wallet/pkg/wallet"
 )
 
@@ -22,15 +23,27 @@ func main() {
 		log.Printf("method Deposit returned not nil error, error => %v", err)
 	}
 
-	 for i := 0; i < 100; i++ {
-		svc.Pay(account.ID, types.Money(i), "Cafe")
-	} 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-	ch := svc.SumPaymentsWithProgress()
+
+	for i := 0; i < 1000; i++ {
+		svc.Pay(account.ID, types.Money(i), "Cafe")
+	}
+
+	var ch <-chan types.Progress
+	go func() {
+		defer wg.Done()
+		ch = svc.SumPaymentsWithProgress()
+	}()
+	go func() {
+		defer wg.Done()
+		ch = svc.SumPaymentsWithProgress()
+	}()
+
+	wg.Wait()
 
 	s, ok := <-ch
-
-	log.Println("oo", ok)
 
 	if !ok {
 		log.Printf(" method SumPaymentsWithProgress ok not closed => %v", ok)
